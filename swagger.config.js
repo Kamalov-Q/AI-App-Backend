@@ -11,6 +11,11 @@ const options = {
     servers: [
       {
         url: "http://localhost:3001/api",
+        description: "Development server",
+      },
+      {
+        url: "https://book-store-h6sd.onrender.com/api",
+        description: "Production server",
       },
     ],
   },

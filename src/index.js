@@ -5,7 +5,7 @@ import bookRouter from "./routes/books.routes.js";
 import { connectDb } from "./lib/db.js";
 import path from "path";
 import swaggerUi from "swagger-ui-express";
-import swaggerSpec from "../swagger.config.js";
+import swaggerSpec from "../config/swagger.config.js";
 const app = express();
 
 const PORT = process.env.PORT || 3001;

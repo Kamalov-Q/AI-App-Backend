@@ -1,102 +1,10 @@
 import User from "../models/User.js";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
+import { comparePassword, hashPassword } from "../utils/bcrypt.hash.js";
+import { generateToken } from "../utils/generateToken.js";
+import Book from "../models/Book.js";
 
-const generateToken = (userId) => {
-  try {
-    const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-    return token;
-  } catch (error) {
-    console.error(`Error while generating token: ${error}`);
-  }
-};
 
-const hashPassword = async (password) => {
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    return hashedPassword;
-  } catch (error) {
-    console.error(`Error while hashing password: ${error}`);
-  }
-};
-
-const comparePassword = async (password, hashedPassword) => {
-  try {
-    const isPasswordMatch = await bcrypt.compare(password, hashedPassword);
-    return isPasswordMatch;
-  } catch (error) {
-    console.error(`Error while comparing password: ${error}`);
-  }
-};
-
-/**
- * @swagger
- * /auth/sign-up:
- *   post:
- *     summary: Register a new user
- *     tags:
- *       - Auth
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - username
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 example: "user@example.com"
- *               username:
- *                 type: string
- *                 minLength: 3
- *                 example: "john_doe"
- *               password:
- *                 type: string
- *                 minLength: 6
- *                 example: "mypassword123"
- *     responses:
- *       201:
- *         description: User created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "User created successfully"
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                       example: "64b123a4f9d2e4b8a3e7c123"
- *                     username:
- *                       type: string
- *                       example: "john_doe"
- *                     email:
- *                       type: string
- *                       example: "user@example.com"
- *                     profileImg:
- *                       type: string
- *                       example: "https://api.dicebear.com/9.x/big-ears-neutral/svg?seed=john_doe"
- *                 token:
- *                   type: string
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *       409:
- *         description: Email or Username already exists
- *       422:
- *         description: Validation error (missing or invalid fields)
- *       500:
- *         description: Internal server error
- */
 export const signUp = async (req, res) => {
   try {
     const { email, username, password: _pw } = req.body;
@@ -139,7 +47,7 @@ export const signUp = async (req, res) => {
       email,
       username,
       password,
-      profileImg,
+      profileImg
     });
 
     const user = await newUser.save();
@@ -153,6 +61,8 @@ export const signUp = async (req, res) => {
         username: user?.username,
         email: user?.email,
         profileImg: user?.profileImg ? user?.profileImg : profileImg,
+        role: user?.role,
+        isDeleted: user?.isDeleted
       },
       token,
     });
@@ -162,68 +72,7 @@ export const signUp = async (req, res) => {
   }
 };
 
-/**
- * @swagger
- * /auth/login:
- *   post:
- *     summary: Login an existing user
- *     tags:
- *       - Auth
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 example: "user@example.com"
- *               password:
- *                 type: string
- *                 example: "mypassword123"
- *     responses:
- *       200:
- *         description: User logged in successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "User logged in successfully"
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                       example: "64b123a4f9d2e4b8a3e7c123"
- *                     username:
- *                       type: string
- *                       example: "john_doe"
- *                     email:
- *                       type: string
- *                       example: "user@example.com"
- *                     profileImg:
- *                       type: string
- *                       example: "https://api.dicebear.com/9.x/big-ears-neutral/svg?seed=john_doe"
- *                 token:
- *                   type: string
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *       401:
- *         description: Invalid credentials
- *       404:
- *         description: User not found
- *       422:
- *         description: Validation error (missing fields)
- *       500:
- *         description: Internal server error
- */
+
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -237,6 +86,8 @@ export const login = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    console.log(user, "user");
+
     const isPasswordMatch = await comparePassword(password, user.password);
 
     if (!isPasswordMatch) {
@@ -245,6 +96,8 @@ export const login = async (req, res) => {
 
     const token = generateToken(user?._id);
 
+    console.log(token, "token");
+
     return res.status(200).json({
       message: "User logged in successfully",
       user: {
@@ -252,6 +105,8 @@ export const login = async (req, res) => {
         username: user?.username,
         email: user?.email,
         profileImg: user?.profileImg,
+        role: user?.role ? user?.role : "user",
+        isDeleted: user?.isDeleted
       },
       token,
     });
@@ -260,3 +115,45 @@ export const login = async (req, res) => {
     return res.status(500).json({ message: `Something went wrong : ${error}` });
   }
 };
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({ isDeleted: false }).populate("deletedBy", "username email profileImg");
+
+    return res.status(200).json({ users, message: "Users fetched successfully", count: users.length });
+  } catch (error) {
+    console.error(`Error while getting all users: ${error}`);
+    return res.status(500).json({ message: `Internal Server Error : ${error}` });
+
+  }
+}
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { id: userId } = req.params;
+    const delId = req.user._id;
+    if (!mongoose.Types.ObjectId.isValid(userId) || !userId) {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
+
+    const existingUser = await User.findById(userId);
+
+    if (!existingUser || existingUser.isDeleted) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    //Perform soft delete
+    existingUser.isDeleted = true;
+    existingUser.deletedAt = new Date();
+    existingUser.deletedBy = delId;
+    (await existingUser.save()).populate("deletedBy", "username email profileImg");
+
+    await Book.updateMany({ author: userId }, { author: null });
+
+    return res.status(200).json({ message: "User deleted successfully", user: existingUser });
+
+  } catch (error) {
+    console.error(`Error while deleting user: ${error}`);
+    return res.status(500).json({ message: `Internal Server Error : ${error}` });
+  }
+}

@@ -88,8 +88,6 @@ export const getBooksByUser = async (req, res) => {
       .json({ message: `Internal server error : ${error}` });
   }
 }
-
-
 export const deleteBooks = async (req, res) => {
   try {
     const { id } = req.params

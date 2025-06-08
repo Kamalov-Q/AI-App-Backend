@@ -45,9 +45,8 @@ export const uploadImage = async (req, res) => {
       return res.status(422).json({ message: "Image is required" });
     }
 
-    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${
-      req.file.filename
-    }`;
+    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename
+      }`;
 
     return res.status(200).json({
       message: "Image uploaded successfully",
@@ -129,21 +128,31 @@ export const uploadImage = async (req, res) => {
  */
 export const createBook = async (req, res) => {
   try {
-    const { title, caption, rating, imageUrl, author } = req.body;
+    const { title, caption, rating, imageUrl } = req.body;
 
-    if (!title || !caption || !rating || !imageUrl || !author) {
+    if (!title || !caption || !rating || !imageUrl) {
       return res.status(422).json({ message: "All fields are required" });
     }
 
-    const newBook = new Book({
+    const existingBook = await Book.findOne({ title });
+
+    if (existingBook) {
+      return res.status(409).json({ message: "Book already exists" });
+    }
+
+    const book = await Book.create({
       title,
       caption,
       rating,
       imageUrl,
-      author,
+      author: req.user._id,
+    })
+
+    const newBook = await Book.findById(book?._id).populate({
+      path: "author",
+      select: "username email profileImg",
     });
 
-    await newBook.save();
     return res
       .status(201)
       .json({ message: "Book created successfully", book: newBook });

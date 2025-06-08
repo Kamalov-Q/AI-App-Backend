@@ -7,45 +7,95 @@
  *       properties:
  *         id:
  *           type: string
+ *           example: "64c31e8e3e45d1fbb59e38c3"
  *         username:
  *           type: string
+ *           example: "john_doe"
  *         email:
  *           type: string
+ *           example: "john@example.com"
  *         profileImg:
  *           type: string
+ *           example: "https://example.com/avatar.png"
  *         role:
  *           type: string
  *           enum: [user, admin]
+ *           example: "user"
  *         isDeleted:
  *           type: boolean
+ *           example: false
  *         deletedBy:
  *           type: object
+ *           example: null
  *         deletedAt:
  *           type: string
  *           format: date-time
+ *           example: null
+ * 
  *     SignUpInput:
  *       type: object
- *       required:
- *         - email
- *         - username
- *         - password
+ *       required: [email, username, password]
  *       properties:
  *         email:
  *           type: string
+ *           example: "newuser@example.com"
  *         username:
  *           type: string
+ *           example: "new_user"
  *         password:
  *           type: string
+ *           example: "password123"
+ * 
  *     LoginInput:
  *       type: object
- *       required:
- *         - email
- *         - password
+ *       required: [email, password]
  *       properties:
  *         email:
  *           type: string
+ *           example: "john@example.com"
  *         password:
  *           type: string
+ *           example: "securePassword!"
+ * 
+ *     Book:
+ *       type: object
+ *       required: [title, caption, rating, imageUrl]
+ *       properties:
+ *         _id:
+ *           type: string
+ *           example: "64d4e8b2e9fbe2bcf874e142"
+ *         title:
+ *           type: string
+ *           example: "The Great Gatsby"
+ *         caption:
+ *           type: string
+ *           example: "A novel by F. Scott Fitzgerald"
+ *         rating:
+ *           type: number
+ *           example: 4.7
+ *         imageUrl:
+ *           type: string
+ *           example: "https://example.com/gatsby.jpg"
+ *         author:
+ *           $ref: '#/components/schemas/User'
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2024-06-01T12:00:00.000Z"
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2024-06-05T15:00:00.000Z"
+ * 
+ *     ImageUploadResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: "Image uploaded successfully"
+ *         imageUrl:
+ *           type: string
+ *           example: "https://example.com/uploads/book.jpg"
  *
  * /auth/sign-up:
  *   post:
@@ -60,6 +110,11 @@
  *     responses:
  *       201:
  *         description: User created successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "User registered"
+ *               userId: "64c31e8e3e45d1fbb59e38c3"
  *       409:
  *         description: Email or username already exists
  *       422:
@@ -80,6 +135,11 @@
  *     responses:
  *       200:
  *         description: User logged in successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               accessToken: "jwt.token.here"
+ *               refreshToken: "refresh.token.here"
  *       401:
  *         description: Invalid credentials
  *       404:
@@ -96,6 +156,13 @@
  *     responses:
  *       200:
  *         description: Users fetched successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               users:
+ *                 - id: "64c31e8e3e45d1fbb59e38c3"
+ *                   username: "john_doe"
+ *                   email: "john@example.com"
  *       500:
  *         description: Server error
  *
@@ -113,66 +180,17 @@
  *     responses:
  *       200:
  *         description: User deleted successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "User soft-deleted"
  *       400:
- *         description: Invalid user id
+ *         description: Invalid user ID
  *       404:
  *         description: User not found or already deleted
  *       500:
  *         description: Server error
- */
-
-
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     Book:
- *       type: object
- *       required:
- *         - title
- *         - caption
- *         - rating
- *         - imageUrl
- *       properties:
- *         _id:
- *           type: string
- *         title:
- *           type: string
- *         caption:
- *           type: string
- *         rating:
- *           type: number
- *         imageUrl:
- *           type: string
- *         author:
- *           type: object
- *           $ref: '#/components/schemas/User'
- *         createdAt:
- *           type: string
- *           format: date-time
- *         updatedAt:
- *           type: string
- *           format: date-time
- *     ImageUploadResponse:
- *       type: object
- *       properties:
- *         message:
- *           type: string
- *         imageUrl:
- *           type: string
- *     User:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *         username:
- *           type: string
- *         email:
- *           type: string
- *         profileImg:
- *           type: string
-
+ *
  * /books/upload:
  *   post:
  *     summary: Upload an image for a book
@@ -196,7 +214,7 @@
  *               $ref: '#/components/schemas/ImageUploadResponse'
  *       422:
  *         description: Image is required
-
+ *
  * /books:
  *   post:
  *     summary: Create a new book
@@ -208,33 +226,23 @@
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - title
- *               - caption
- *               - rating
- *               - imageUrl
- *             properties:
- *               title:
- *                 type: string
- *               caption:
- *                 type: string
- *               rating:
- *                 type: number
- *               imageUrl:
- *                 type: string
+ *             $ref: '#/components/schemas/Book'
  *     responses:
  *       201:
  *         description: Book created successfully
  *         content:
  *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Book'
+ *             example:
+ *               _id: "64d4e8b2e9fbe2bcf874e142"
+ *               title: "The Great Gatsby"
+ *               caption: "A classic novel"
+ *               rating: 4.7
+ *               imageUrl: "https://example.com/gatsby.jpg"
  *       409:
  *         description: Book already exists
  *       422:
  *         description: All fields are required
-
+ * 
  *   get:
  *     summary: Get all books (paginated)
  *     tags: [Books]
@@ -254,16 +262,15 @@
  *         description: Books fetched successfully
  *         content:
  *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 books:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Book'
- *                 count:
- *                   type: integer
-
+ *             example:
+ *               books:
+ *                 - _id: "64d4e8b2e9fbe2bcf874e142"
+ *                   title: "The Great Gatsby"
+ *                   caption: "A classic novel"
+ *                   rating: 4.7
+ *                   imageUrl: "https://example.com/gatsby.jpg"
+ *               count: 1
+ *
  * /books/user:
  *   get:
  *     summary: Get books created by the authenticated user
@@ -275,16 +282,15 @@
  *         description: Books fetched successfully
  *         content:
  *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 books:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Book'
- *                 count:
- *                   type: integer
-
+ *             example:
+ *               books:
+ *                 - _id: "64d4e8b2e9fbe2bcf874e142"
+ *                   title: "The Great Gatsby"
+ *                   caption: "A classic novel"
+ *                   rating: 4.7
+ *                   imageUrl: "https://example.com/gatsby.jpg"
+ *               count: 1
+ *
  * /books/{id}:
  *   delete:
  *     summary: Delete a book by ID
@@ -300,6 +306,10 @@
  *     responses:
  *       200:
  *         description: Book deleted successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Book deleted"
  *       400:
  *         description: Invalid book ID
  *       404:

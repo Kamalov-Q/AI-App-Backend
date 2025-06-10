@@ -116,6 +116,17 @@ export const login = async (req, res) => {
   }
 };
 
+export const getCurrentUser = async (req, res) => {
+  try {
+    const { _id: id } = req.user;
+    const user = await User.findById(id).populate("deletedBy", "username email profileImg");
+    return res.status(200).json({ user, message: "User fetched successfully" });
+  } catch (error) {
+    console.error(`Error while getting current user: ${error}`);
+    return res.status(500).json({ message: `Internal Server Error : ${error}` });
+  }
+}
+
 export const getAllUsers = async (req, res) => {
   try {
     const users = await User.find({ isDeleted: false }).populate("deletedBy", "username email profileImg");

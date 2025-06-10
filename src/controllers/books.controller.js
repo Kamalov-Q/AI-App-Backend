@@ -88,6 +88,41 @@ export const getBooksByUser = async (req, res) => {
       .json({ message: `Internal server error : ${error}` });
   }
 }
+
+export const updateBook = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { title, author, imageUrl, caption, rating } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id) || !id) {
+      return res.status(422).json({ message: "Invalid book id" });
+    }
+
+    const updatedBook = {};
+    if (title) updatedBook.title = title;
+    if (author) updatedBook.author = author;
+    if (imageUrl) updatedBook.imageUrl = imageUrl
+    if (caption) updatedBook.caption = caption
+    if (rating) updatedBook.rating = rating
+
+    const existingBook = await Book.findById(id);
+
+    if (!existingBook) {
+      return res.status(404).json({ message: "Book not found" })
+    }
+
+    const updBook = await Book.findByIdAndUpdate(id, updatedBook, { new: true });
+    return res.status(200).json({ message: "Book updated successfully", book: updBook });
+
+  } catch (error) {
+    console.error(`Error while updating book: ${error}`);
+    return res
+      .status(500)
+      .json({ message: `Internal server error : ${error}` });
+  }
+}
+
 export const deleteBooks = async (req, res) => {
   try {
     const { id } = req.params

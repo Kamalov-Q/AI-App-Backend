@@ -127,9 +127,10 @@ export const getCurrentUser = async (req, res) => {
   }
 }
 
-export const getAllUsers = async (req, res) => {
+export const getAllUsers = async (_, res) => {
   try {
     const users = await User.find({ isDeleted: false }).populate("deletedBy", "username email profileImg");
+    // const users = await User.find({ isDeleted: false }).select("-deletedBy");
 
     return res.status(200).json({ users, message: "Users fetched successfully", count: users.length });
   } catch (error) {

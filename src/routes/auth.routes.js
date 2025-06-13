@@ -7,7 +7,7 @@ import { authorizeUser } from "../../middlewares/authorization.middleware.js";
 authRouter.post("/login", login);
 authRouter.post("/sign-up", signUp);
 authRouter.get("/", authentificateUser, authorizeUser(["admin"]), getAllUsers);
-authRouter.get("/user", authentificateUser, authorizeUser(["admin"]), getCurrentUser);
+authRouter.get("/user", authentificateUser, authorizeUser(["admin", "user"]), getCurrentUser);
 authRouter.delete("/:id", authentificateUser, authorizeUser(["admin"]), deleteUser);
 
 export default authRouter;

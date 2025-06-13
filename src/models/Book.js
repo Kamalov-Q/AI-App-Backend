@@ -23,6 +23,17 @@ const bookSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    },
+    deletedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
